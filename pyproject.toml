@@ -17,6 +17,7 @@ ci = [
 ]
 dev = [
     "ipykernel>=6.29.5",
+    "pydantic-settings>=2.8.1",
 ]
 data = [
     "openpyxl>=3.1.5",
