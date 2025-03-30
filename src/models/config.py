@@ -10,9 +10,9 @@ class TrainingSettings(BaseModel):
     """Configuration settings for model training."""
 
     data_path: str = os.path.join(ROOT_DIR, "data/raw.csv")
-    Y: str = "TOBIN_Q_RATIO"
-    T: List[str] = ["ESG_SCORE"]
-    W: List[str] = [
+    Y_params: List[str] = ["TOBIN_Q_RATIO"]
+    T_params: List[str] = ["ESG_SCORE"]
+    W_params: List[str] = [
         "FUND_CRNCY_ADJ_MKT_CAP",
         "FUND_TOT_DEBT_TO_TOT_EQY",
         "FUND_BS_TOT_ASSET",
@@ -24,7 +24,7 @@ class TrainingSettings(BaseModel):
         "MACRO_GDP_GROWTH",
         "MACRO_PMI",
     ]
-    X: Optional[List[str]] = None
+    X_params: Optional[List[str]] = None
     seed: int = 11
     save_dir: str = os.path.join(ROOT_DIR, "models")
 
