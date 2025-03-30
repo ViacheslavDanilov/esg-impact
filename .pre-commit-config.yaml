@@ -56,5 +56,5 @@ repos:
 # exclude given directories from checking
 exclude: |
   (?x)(
-      ^src/models/
+      ^src/temp/
   )
