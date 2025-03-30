@@ -1,14 +1,32 @@
+import os
+from typing import List, Optional
+
 from pydantic import BaseModel
+
+from src import ROOT_DIR
 
 
 class TrainingSettings(BaseModel):
     """Configuration settings for model training."""
 
-    # TODO: add more parameters
-    db_host: str = "test"
-    db_port: int = 123
-    db_name: str = "test"
-    db_user: str = "test"
+    data_path: str = os.path.join(ROOT_DIR, "data/raw.csv")
+    Y: str = "TOBIN_Q_RATIO"
+    T: List[str] = ["ESG_SCORE"]
+    W: List[str] = [
+        "FUND_CRNCY_ADJ_MKT_CAP",
+        "FUND_TOT_DEBT_TO_TOT_EQY",
+        "FUND_BS_TOT_ASSET",
+        "FUND_NET_DEBT_EBITDA_ADJUSTED",
+        "FUND_RETURN_ON_ASSET",
+        "FUND_RETURN_COM_EQY",
+        "MACRO_INFLATION",
+        "MACRO_UNEMPLOYMENT",
+        "MACRO_GDP_GROWTH",
+        "MACRO_PMI",
+    ]
+    X: Optional[List[str]] = None
+    seed: int = 11
+    save_dir: str = os.path.join(ROOT_DIR, "models")
 
 
 class Settings(BaseModel):
