@@ -40,7 +40,7 @@ class DataScaler:
         - data (pd.DataFrame): Data to be transformed.
 
         Returns:
-        - Transformed data as a NumPy array.
+        - Transformed data as a DataFrame.
         """
         if self.scaler is None:
             if os.path.exists(self.scaler_path):
@@ -48,7 +48,8 @@ class DataScaler:
                 self.logger.info(f"Scaler loaded from {self.scaler_path}.")
             else:
                 raise FileNotFoundError("Scaler has not been fitted or saved.")
-        return self.scaler.transform(data)
+        transformed_data = self.scaler.transform(data)
+        return pd.DataFrame(transformed_data, columns=data.columns, index=data.index)
 
     def fit_transform(self, data: pd.DataFrame) -> pd.DataFrame:
         """Fits the scaler to the data, transforms it, and saves the scaler to disk.
@@ -57,7 +58,7 @@ class DataScaler:
         - data (pd.DataFrame): Data to fit and transform.
 
         Returns:
-        - Transformed data as a NumPy array.
+        - Transformed data as a DataFrame.
         """
         self.fit(data)
         return self.transform(data)
