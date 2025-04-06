@@ -6,7 +6,7 @@ from pydantic import BaseModel
 from src import ROOT_DIR
 
 
-class TrainingSettings(BaseModel):
+class Training(BaseModel):
     """Configuration settings for model training."""
 
     data_path: str = os.path.join(ROOT_DIR, "data/raw.csv")
@@ -32,7 +32,7 @@ class TrainingSettings(BaseModel):
 class Settings(BaseModel):
     """Main configuration class."""
 
-    train: TrainingSettings = TrainingSettings()
+    train: Training = Training()
 
 
 cfg = Settings()
