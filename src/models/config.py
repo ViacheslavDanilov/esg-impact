@@ -44,9 +44,9 @@ class Training(BaseModel):
         "MACRO_PMI",
     ]
     X_params: List[str] = [
-        "FUND_BS_TOT_ASSET",  # Размер компании
-        "FUND_RETURN_ON_ASSET",  # Доходность
-        "ESG_SCORE",  # Интегральный скор, может быть полезен как доп. индикатор
+        "FUND_BS_TOT_ASSET",  # proxy for company size
+        "FUND_RETURN_ON_ASSET",  # profitability
+        "ESG_SCORE",  # overall ESG profile
     ]
     seed: int = 11
     save_dir: str = os.path.join(ROOT_DIR, "models")
