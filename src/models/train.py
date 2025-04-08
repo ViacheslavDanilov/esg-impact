@@ -10,7 +10,7 @@ from sklearn.model_selection import train_test_split
 
 from src import ROOT_DIR
 from src.data.scaler import DataScaler
-from src.data.utils import generate_mock_data
+from src.data.utils import generate_mock_data  # noqa
 
 logging.basicConfig(
     level=logging.INFO,
@@ -25,10 +25,11 @@ logger = logging.getLogger(__name__)
 
 def main():
     # Load the raw data
-    df_raw = pd.read_csv(cfg.train.data_path)
+    df = pd.read_csv(cfg.train.data_path)
+    df["IS_FINANCIAL_SECTOR"] = df["SECTOR"].apply(lambda x: 1 if "Financials" in x else 0)
 
-    # Generate synthetic data
-    df = generate_mock_data(df_raw, num_rows=500, seed=11)
+    # Generate synthetic data - used for debugging purposes
+    # df = generate_mock_data(df_raw, num_rows=500, seed=11)
 
     # Target variable (Y_params) = TOBIN_Q_RATIO
     Y = df[cfg.train.Y_params]
@@ -40,8 +41,7 @@ def main():
     W = df[cfg.train.W_params]
 
     # Variables for heterogeneity (X_params) = features that affect the strength of the ESG effect
-    # TODO: define X_params in order to use the model
-    X = df[cfg.train.X_params] if cfg.train.X_params else pd.DataFrame(index=df.index)
+    X = df[cfg.train.X_params]
 
     # Split the data into training and validation sets
     X_train, X_test, Y_train, Y_test, T_train, T_test, W_train, W_test = train_test_split(
@@ -54,7 +54,6 @@ def main():
         shuffle=True,
     )
 
-    # TODO: think which columns to normalize
     # Initialize the DataScaler
     scaler_path_w = os.path.join(ROOT_DIR, "data", "scaler_w.pkl")
     scaler_w = DataScaler(scaler_path_w)
@@ -78,17 +77,19 @@ def main():
     model.fit(
         Y=Y_train,
         T=T_train,
-        X=X_train_scaled,  # TODO: define X_params in order to use the model
+        X=X_train_scaled,
         W=W_train_scaled,
     )
 
-    ate = model.ate(X_test_scaled)  # Average Treatment Effect (ATE)
+    ate = float(model.ate(X_test_scaled))  # Average Treatment Effect (ATE)
     cate = model.effect(X_test_scaled)  # Heterogeneous Treatment Effect (CATE)
-    logger.info(f"Average Treatment Effect (ATE): {ate}")
+    logger.info(f"Average Treatment Effect (ATE): {ate:.2f}")
     logger.info(f"Conditional Average Treatment Effect (CATE): {cate}")
 
     # Compute SHAP values for the model
-    explainer = shap.Explainer(model.model_final)
+    explainer = shap.Explainer(
+        model.model_final,
+    )  # FIXME: TypeError: The passed model is not callable and cannot be analyzed directly with the given masker! Model: StatsModelsLinearRegression(fit_intercept=False)
     shap_values = explainer(X_test_scaled)
 
     # Visualize SHAP values
