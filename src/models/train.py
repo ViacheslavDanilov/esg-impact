@@ -4,7 +4,9 @@ import os
 import pandas as pd
 import shap
 from config import cfg
+from econml.cate_interpreter import SingleTreeCateInterpreter, SingleTreePolicyInterpreter
 from econml.dml import LinearDML
+from matplotlib import pyplot as plt
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import train_test_split
 
@@ -86,14 +88,59 @@ def main():
     logger.info(f"Average Treatment Effect (ATE): {ate:.2f}")
     logger.info(f"Conditional Average Treatment Effect (CATE): {cate}")
 
-    # Compute SHAP values for the model
-    explainer = shap.Explainer(
-        model.model_final,
-    )  # FIXME: TypeError: The passed model is not callable and cannot be analyzed directly with the given masker! Model: StatsModelsLinearRegression(fit_intercept=False)
-    shap_values = explainer(X_test_scaled)
+    # Tree Interpreter
+    # TODO: save tree interpreter visualization
+    tree_interpreter = SingleTreeCateInterpreter(
+        include_model_uncertainty=True,
+        max_depth=2,
+        min_samples_leaf=10,
+    )
+    # The CATE model's behavior based on the features used for heterogeneity
+    tree_interpreter.interpret(model, X_test_scaled)
+    # Plot the tree
+    tree_interpreter.plot(
+        feature_names=[
+            "FUND_BS_TOT_ASSET",
+            "FUND_RETURN_ON_ASSET",
+            "ESG_SCORE",
+        ],
+        fontsize=12,
+    )
+    plt.show()
 
-    # Visualize SHAP values
-    shap.summary_plot(shap_values, X_test_scaled)
+    # Policy Interpreter
+    # TODO: save policy interpreter visualization
+    # A tree-based treatment policy based on the CATE model
+    # sample_treatment_costs is the cost of treatment. Policy will treat if effect is above this cost.
+    policy_interpreter = SingleTreePolicyInterpreter(
+        risk_level=None,
+        max_depth=2,
+        min_samples_leaf=1,
+        min_impurity_decrease=0.001,
+    )
+    policy_interpreter.interpret(model, X_test_scaled, sample_treatment_costs=0.02)
+    # Plot the tree
+    policy_interpreter.plot(
+        feature_names=[
+            "FUND_BS_TOT_ASSET",
+            "FUND_RETURN_ON_ASSET",
+            "ESG_SCORE",
+        ],
+        fontsize=12,
+    )
+    plt.show()
+
+    # Compute SHAP values for the model
+    # TODO: save shap visualization
+    shap_values = model.shap_values(X_test_scaled)
+    # local view: explain heterogeneity for a given observation
+    ind = 1
+    shap.plots.force(
+        shap_values["TOBIN_Q_RATIO"]["E_SUSTAINABLE_PRODUCT_ISSUE_SCORE"][ind],
+        matplotlib=True,
+    )
+    # global view: explain heterogeneity for a sample of dataset
+    shap.summary_plot(shap_values["TOBIN_Q_RATIO"]["E_SUSTAINABLE_PRODUCT_ISSUE_SCORE"])
 
     logger.info("Complete")
 
