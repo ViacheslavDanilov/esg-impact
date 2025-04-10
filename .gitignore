@@ -163,3 +163,4 @@ logs/
 
 # Evaluation
 /eval/*.png
+/eval/shap_summaries/*.png
