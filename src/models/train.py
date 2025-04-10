@@ -59,7 +59,7 @@ def split_and_scale_data(df):
 
     return {
         "X_train": X_train_scaled,
-        "X_test": X_test_scaled,
+        "X": X_test_scaled,
         "Y_train": Y_train,
         "Y_test": Y_test,
         "T_train": T_train,
@@ -70,11 +70,11 @@ def split_and_scale_data(df):
 
 
 def train_model(
-    X_train,
-    Y_train,
-    T_train,
-    W_train,
-):
+    X_train: pd.DataFrame,
+    Y_train: pd.DataFrame,
+    T_train: pd.DataFrame,
+    W_train: pd.DataFrame,
+) -> LinearDML:
     model = LinearDML(
         model_y=RandomForestRegressor(n_estimators=100, random_state=cfg.train.seed),
         model_t=RandomForestRegressor(n_estimators=100, random_state=cfg.train.seed),
@@ -84,9 +84,12 @@ def train_model(
     return model
 
 
-def interpret_model(model, X_test):
-    ate = float(model.ate(X_test))
-    cate = model.effect(X_test)
+def interpret_model(
+    model: LinearDML,
+    X: pd.DataFrame,
+) -> None:
+    ate = float(model.ate(X))
+    cate = model.effect(X)
     logger.info(f"Average Treatment Effect (ATE): {ate:.2f}")
     logger.info(f"Conditional Average Treatment Effect (CATE): {cate}")
 
@@ -95,7 +98,7 @@ def interpret_model(model, X_test):
         max_depth=2,
         min_samples_leaf=10,
     )
-    tree_interpreter.interpret(model, X_test)
+    tree_interpreter.interpret(model, X)
     tree_interpreter.plot(
         feature_names=[
             "FUND_BS_TOT_ASSET",
@@ -112,7 +115,7 @@ def interpret_model(model, X_test):
         min_samples_leaf=1,
         min_impurity_decrease=0.001,
     )
-    policy_interpreter.interpret(model, X_test, sample_treatment_costs=0.02)
+    policy_interpreter.interpret(model, X, sample_treatment_costs=0.02)
     policy_interpreter.plot(
         feature_names=[
             "FUND_BS_TOT_ASSET",
@@ -124,8 +127,11 @@ def interpret_model(model, X_test):
     plt.show()
 
 
-def explain_shap(model, X_test):
-    shap_values = model.shap_values(X_test)
+def explain_shap(
+    model: LinearDML,
+    X: pd.DataFrame,
+):
+    shap_values = model.shap_values(X)
     ind = 1
     shap.plots.force(
         shap_values["TOBIN_Q_RATIO"]["E_SUSTAINABLE_PRODUCT_ISSUE_SCORE"][ind],
@@ -151,13 +157,13 @@ def main():
     # Interpret the model
     interpret_model(
         model=model,
-        X_test=data["X_test"],
+        X=data["X"],
     )
 
     # Explain the model using SHAP
     explain_shap(
         model=model,
-        X_test=data["X_test"],
+        X=data["X"],
     )
 
     logger.info("Complete")
