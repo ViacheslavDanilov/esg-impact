@@ -162,7 +162,7 @@ logs/
 /data/scaler*.pkl
 
 # Evaluation
-eval/*/
+/eval/*.png
 
 # Models
 /models/*/
