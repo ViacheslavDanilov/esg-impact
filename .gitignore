@@ -159,11 +159,10 @@ logs/
 .dvc/cache
 
 # Dataset
-data/interim*/
-data/embeddings*/
+/data/scaler*.pkl
 
 # Evaluation
-eval/embeddings*/
+eval/*/
 
 # Models
 /models/*/
