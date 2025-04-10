@@ -87,6 +87,8 @@ def train_model(
 def visualize_cate_tree(
     model: LinearDML,
     X: pd.DataFrame,
+    features: list[str] = None,
+    save_dir: str = os.path.join(ROOT_DIR, "eval"),
 ) -> None:
     tree_interpreter = SingleTreeCateInterpreter(
         include_model_uncertainty=True,
@@ -95,19 +97,16 @@ def visualize_cate_tree(
     )
     tree_interpreter.interpret(model, X)
 
-    fig, ax = plt.subplots(figsize=(20, 10))
+    fig, ax = plt.subplots(figsize=(60, 20))
     tree_interpreter.plot(
-        feature_names=[
-            "FUND_BS_TOT_ASSET",
-            "FUND_RETURN_ON_ASSET",
-            "ESG_SCORE",
-        ],
-        precision=2,
+        feature_names=features,
+        precision=1,
         fontsize=12,
         ax=ax,
     )
     plt.tight_layout()
-    save_path = os.path.join(ROOT_DIR, "eval", "cate_tree.png")
+    os.makedirs(save_dir, exist_ok=True)
+    save_path = os.path.join(save_dir, "cate_tree.png")
     plt.savefig(save_path)
     plt.close()
 
@@ -115,6 +114,8 @@ def visualize_cate_tree(
 def visualize_policy_tree(
     model: LinearDML,
     X: pd.DataFrame,
+    features: list[str] = None,
+    save_dir: str = os.path.join(ROOT_DIR, "eval"),
 ) -> None:
     policy_interpreter = SingleTreePolicyInterpreter(
         risk_level=None,
@@ -124,19 +125,16 @@ def visualize_policy_tree(
     )
     policy_interpreter.interpret(model, X, sample_treatment_costs=0.02)
 
-    fig, ax = plt.subplots(figsize=(20, 10))
+    fig, ax = plt.subplots(figsize=(40, 20))
     policy_interpreter.plot(
-        feature_names=[
-            "FUND_BS_TOT_ASSET",
-            "FUND_RETURN_ON_ASSET",
-            "ESG_SCORE",
-        ],
-        precision=2,
+        feature_names=features,
+        precision=1,
         fontsize=12,
         ax=ax,
     )
     plt.tight_layout()
-    save_path = os.path.join(ROOT_DIR, "eval", "policy_tree.png")
+    os.makedirs(save_dir, exist_ok=True)
+    save_path = os.path.join(save_dir, "policy_tree.png")
     plt.savefig(save_path)
     plt.close()
 
@@ -144,14 +142,33 @@ def visualize_policy_tree(
 def explain_shap(
     model: LinearDML,
     X: pd.DataFrame,
+    outcome: str = "TOBIN_Q_RATIO",
+    treatments: list[str] = None,
+    save_dir: str = os.path.join(ROOT_DIR, "eval", "shap_summaries"),
 ):
+    if treatments is None:
+        treatments = list(model.shap_values(X)[outcome].keys())  # Auto-detect all treatments
+
+    os.makedirs(save_dir, exist_ok=True)
     shap_values = model.shap_values(X)
-    ind = 1
-    shap.plots.force(
-        shap_values["TOBIN_Q_RATIO"]["E_SUSTAINABLE_PRODUCT_ISSUE_SCORE"][ind],
-        matplotlib=True,
-    )
-    shap.summary_plot(shap_values["TOBIN_Q_RATIO"]["E_SUSTAINABLE_PRODUCT_ISSUE_SCORE"])
+
+    for treatment in treatments:
+        values = shap_values[outcome][treatment]
+
+        # Local force plot (optional, only for the first treatment/index)
+        if treatment == treatments[0]:
+            ind = 1
+            shap.plots.force(values[ind], matplotlib=True)
+
+        # Global summary plot
+        plt.figure(figsize=(16, 10))
+        shap.summary_plot(values, X, show=False)
+        save_path = os.path.join(save_dir, f"{treatment}.png")
+        plt.tight_layout()
+        plt.savefig(save_path)
+        plt.close()
+
+        logger.info(f"Saved SHAP summary plot for '{treatment}' to: {save_path}")
 
 
 def main():
@@ -172,18 +189,22 @@ def main():
     visualize_cate_tree(
         model=model,
         X=data["X_test"],
+        features=cfg.train.X_params,
     )
 
     # Visualize the policy tree
     visualize_policy_tree(
         model=model,
         X=data["X_test"],
+        features=cfg.train.X_params,
     )
 
     # Explain the model using SHAP
     explain_shap(
         model=model,
         X=data["X_test"],
+        outcome=cfg.train.Y_params[0],
+        treatments=cfg.train.T_params,
     )
 
     logger.info("Complete")
