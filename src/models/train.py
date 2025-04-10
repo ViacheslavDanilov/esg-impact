@@ -59,7 +59,7 @@ def split_and_scale_data(df):
 
     return {
         "X_train": X_train_scaled,
-        "X": X_test_scaled,
+        "X_test": X_test_scaled,
         "Y_train": Y_train,
         "Y_test": Y_test,
         "T_train": T_train,
@@ -84,31 +84,38 @@ def train_model(
     return model
 
 
-def interpret_model(
+def visualize_cate_tree(
     model: LinearDML,
     X: pd.DataFrame,
 ) -> None:
-    ate = float(model.ate(X))
-    cate = model.effect(X)
-    logger.info(f"Average Treatment Effect (ATE): {ate:.2f}")
-    logger.info(f"Conditional Average Treatment Effect (CATE): {cate}")
-
     tree_interpreter = SingleTreeCateInterpreter(
         include_model_uncertainty=True,
         max_depth=2,
         min_samples_leaf=10,
     )
     tree_interpreter.interpret(model, X)
+
+    fig, ax = plt.subplots(figsize=(20, 10))
     tree_interpreter.plot(
         feature_names=[
             "FUND_BS_TOT_ASSET",
             "FUND_RETURN_ON_ASSET",
             "ESG_SCORE",
         ],
+        precision=2,
         fontsize=12,
+        ax=ax,
     )
-    plt.show()
+    plt.tight_layout()
+    save_path = os.path.join(ROOT_DIR, "eval", "cate_tree.png")
+    plt.savefig(save_path)
+    plt.close()
 
+
+def visualize_policy_tree(
+    model: LinearDML,
+    X: pd.DataFrame,
+) -> None:
     policy_interpreter = SingleTreePolicyInterpreter(
         risk_level=None,
         max_depth=2,
@@ -116,15 +123,22 @@ def interpret_model(
         min_impurity_decrease=0.001,
     )
     policy_interpreter.interpret(model, X, sample_treatment_costs=0.02)
+
+    fig, ax = plt.subplots(figsize=(20, 10))
     policy_interpreter.plot(
         feature_names=[
             "FUND_BS_TOT_ASSET",
             "FUND_RETURN_ON_ASSET",
             "ESG_SCORE",
         ],
+        precision=2,
         fontsize=12,
+        ax=ax,
     )
-    plt.show()
+    plt.tight_layout()
+    save_path = os.path.join(ROOT_DIR, "eval", "policy_tree.png")
+    plt.savefig(save_path)
+    plt.close()
 
 
 def explain_shap(
@@ -154,16 +168,22 @@ def main():
     )
     print(model.summary())
 
-    # Interpret the model
-    interpret_model(
+    # Visualize the CATE tree
+    visualize_cate_tree(
         model=model,
-        X=data["X"],
+        X=data["X_test"],
+    )
+
+    # Visualize the policy tree
+    visualize_policy_tree(
+        model=model,
+        X=data["X_test"],
     )
 
     # Explain the model using SHAP
     explain_shap(
         model=model,
-        X=data["X"],
+        X=data["X_test"],
     )
 
     logger.info("Complete")
