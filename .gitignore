@@ -159,15 +159,8 @@ logs/
 .dvc/cache
 
 # Dataset
-data/interim*/
-data/embeddings*/
+/data/scaler*.pkl
 
 # Evaluation
-eval/embeddings*/
-
-# Models
-/models/*/
-*.pth
-
-# W&B
-wandb/
+/eval/*.png
+/eval/shap_summaries/*.png

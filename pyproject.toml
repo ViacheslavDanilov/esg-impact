@@ -14,14 +14,19 @@ dependencies = [
 ]
 
 [tool.uv]
-default-groups = ["dev", "ci"]
+default-groups = ["data", "dev", "ci"]
 
 [dependency-groups]
-ci = [
-    "pre-commit>=4.2.0",
+data = [
+    "openpyxl>=3.1.5",
 ]
 dev = [
     "ipykernel>=6.29.5",
+    "matplotlib>=3.10.1",
+    "pydantic>=2.11.2",
+]
+ci = [
+    "pre-commit>=4.2.0",
 ]
 
 [tool.setuptools.packages]
