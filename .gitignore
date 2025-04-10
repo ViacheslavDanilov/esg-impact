@@ -163,10 +163,3 @@ logs/
 
 # Evaluation
 /eval/*.png
-
-# Models
-/models/*/
-*.pth
-
-# W&B
-wandb/
