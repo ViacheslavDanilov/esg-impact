@@ -101,7 +101,7 @@ def visualize_cate_tree(
     tree_interpreter.plot(
         feature_names=features,
         precision=1,
-        fontsize=12,
+        fontsize=16,
         ax=ax,
     )
     plt.tight_layout()
@@ -129,7 +129,7 @@ def visualize_policy_tree(
     policy_interpreter.plot(
         feature_names=features,
         precision=1,
-        fontsize=12,
+        fontsize=18,
         ax=ax,
     )
     plt.tight_layout()
