@@ -177,7 +177,7 @@ wheels = [
 [[package]]
 name = "esg-impact"
 version = "0.1.0"
-source = { virtual = "." }
+source = { editable = "." }
 dependencies = [
     { name = "econml" },
     { name = "matplotlib" },
